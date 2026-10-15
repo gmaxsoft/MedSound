@@ -11,28 +11,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // Dim, low-blue night palette — easy on eyes in a dark room.
-private val NightDeep = Color(0xFF0A0E14)
-private val NightMid = Color(0xFF121820)
-private val NightElevated = Color(0xFF1A222C)
-private val Mist = Color(0xFF6B8F9E)
-private val MistSoft = Color(0xFF8FA8B3)
-private val Foam = Color(0xFFD4DEE4)
-private val FoamDim = Color(0xFF9AA8B0)
-private val SeaAccent = Color(0xFF3A6574)
+// Names differ from MedsoundColors members so the object does not shadow these vals.
+private val nightDeepColor = Color(0xFF0A0E14)
+private val nightMidColor = Color(0xFF121820)
+private val nightElevatedColor = Color(0xFF1A222C)
+private val mistColor = Color(0xFF6B8F9E)
+private val mistSoftColor = Color(0xFF8FA8B3)
+private val foamColor = Color(0xFFD4DEE4)
+private val foamDimColor = Color(0xFF9AA8B0)
+private val seaAccentColor = Color(0xFF3A6574)
 
 private val DarkColors = darkColorScheme(
-    primary = Mist,
-    onPrimary = NightDeep,
-    primaryContainer = SeaAccent,
-    onPrimaryContainer = Foam,
-    secondary = MistSoft,
-    onSecondary = NightDeep,
-    background = NightDeep,
-    onBackground = Foam,
-    surface = NightMid,
-    onSurface = Foam,
-    surfaceVariant = NightElevated,
-    onSurfaceVariant = MistSoft,
+    primary = mistColor,
+    onPrimary = nightDeepColor,
+    primaryContainer = seaAccentColor,
+    onPrimaryContainer = foamColor,
+    secondary = mistSoftColor,
+    onSecondary = nightDeepColor,
+    background = nightDeepColor,
+    onBackground = foamColor,
+    surface = nightMidColor,
+    onSurface = foamColor,
+    surfaceVariant = nightElevatedColor,
+    onSurfaceVariant = mistSoftColor,
     outline = Color(0xFF2C3844),
 )
 
@@ -94,12 +95,12 @@ fun MedsoundTheme(content: @Composable () -> Unit) {
 }
 
 object MedsoundColors {
-    val NightDeep = NightDeep
-    val NightMid = NightMid
-    val NightElevated = NightElevated
-    val Mist = Mist
-    val MistSoft = MistSoft
-    val Foam = Foam
-    val FoamDim = FoamDim
-    val SeaAccent = SeaAccent
+    val NightDeep = nightDeepColor
+    val NightMid = nightMidColor
+    val NightElevated = nightElevatedColor
+    val Mist = mistColor
+    val MistSoft = mistSoftColor
+    val Foam = foamColor
+    val FoamDim = foamDimColor
+    val SeaAccent = seaAccentColor
 }
