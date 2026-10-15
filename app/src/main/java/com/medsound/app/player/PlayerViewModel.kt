@@ -3,12 +3,13 @@ package com.medsound.app.player
 import android.app.Activity
 import android.app.Application
 import android.content.ComponentName
-import android.os.SystemClock
+import android.os.Bundle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.medsound.app.MedsoundApplication
@@ -17,8 +18,6 @@ import com.medsound.app.data.SoundCatalog
 import com.medsound.app.data.isLocked
 import com.medsound.app.data.toMediaItem
 import com.medsound.app.media.PlaybackService
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +25,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.guava.await
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class PlayerUiState(
@@ -34,8 +32,6 @@ data class PlayerUiState(
     val selectedId: String = SoundCatalog.default().id,
     val isPlaying: Boolean = false,
     val isConnected: Boolean = false,
-    val title: String = SoundCatalog.default().title,
-    val subtitle: String = SoundCatalog.default().subtitle,
     val sleepTimerMinutes: Int? = null,
     val sleepRemainingMs: Long? = null,
     val isFadingOut: Boolean = false,
@@ -76,7 +72,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
-    private var sleepJob: Job? = null
+    private var sleepQueuePending = false
+    private var queuedSleepMinutes: Int? = null
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -86,17 +83,17 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             val id = mediaItem?.mediaId ?: return
             val sound = SoundCatalog.findById(id) ?: return
-            _playerState.update {
-                it.copy(
-                    selectedId = sound.id,
-                    title = sound.title,
-                    subtitle = sound.subtitle,
-                )
-            }
+            _playerState.update { it.copy(selectedId = sound.id) }
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             controller?.let { syncFromController(it) }
+        }
+    }
+
+    private val controllerListener = object : MediaController.Listener {
+        override fun onExtrasChanged(controller: MediaController, extras: Bundle) {
+            applySleepExtras(extras)
         }
     }
 
@@ -113,7 +110,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             context,
             ComponentName(context, PlaybackService::class.java),
         )
-        val future = MediaController.Builder(context, token).buildAsync()
+        val future = MediaController.Builder(context, token)
+            .setListener(controllerListener)
+            .buildAsync()
         controllerFuture = future
 
         viewModelScope.launch {
@@ -122,7 +121,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 controller = mediaController
                 mediaController.addListener(playerListener)
                 syncFromController(mediaController)
+                applySleepExtras(mediaController.sessionExtras)
                 _playerState.update { it.copy(isConnected = true) }
+                if (sleepQueuePending) {
+                    sendSleepTimer(queuedSleepMinutes)
+                }
             } catch (_: Exception) {
                 MediaController.releaseFuture(future)
                 controllerFuture = null
@@ -134,8 +137,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun togglePlayPause() {
         val c = controller ?: return
         if (c.isPlaying || _playerState.value.isFadingOut) {
-            abortFadeIfNeeded()
-            c.volume = 1f
+            if (_playerState.value.isFadingOut) {
+                sendSleepTimer(null)
+            }
             c.pause()
         } else {
             c.volume = 1f
@@ -172,22 +176,17 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val c = controller ?: return
         if (sound.isLocked(billing.state.value.isPremium)) return
 
-        val packageName = getApplication<Application>().packageName
-        val item = sound.toMediaItem(packageName)
+        val item = sound.toMediaItem(getApplication())
 
-        abortFadeIfNeeded()
+        if (_playerState.value.isFadingOut) {
+            sendSleepTimer(null)
+        }
         c.volume = 1f
         c.setMediaItem(item)
         c.prepare()
         c.play()
 
-        _playerState.update {
-            it.copy(
-                selectedId = sound.id,
-                title = sound.title,
-                subtitle = sound.subtitle,
-            )
-        }
+        _playerState.update { it.copy(selectedId = sound.id) }
     }
 
     fun openPremiumSheet() {
@@ -204,92 +203,57 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setSleepTimer(minutes: Int?) {
-        sleepJob?.cancel()
-        sleepJob = null
-
-        if (minutes == null) {
-            controller?.volume = 1f
-            _playerState.update {
-                it.copy(
-                    sleepTimerMinutes = null,
-                    sleepRemainingMs = null,
-                    isFadingOut = false,
-                )
-            }
-            return
-        }
-
-        if (_playerState.value.sleepTimerMinutes == minutes && !_playerState.value.isFadingOut) {
-            controller?.volume = 1f
-            _playerState.update {
-                it.copy(
-                    sleepTimerMinutes = null,
-                    sleepRemainingMs = null,
-                    isFadingOut = false,
-                )
-            }
-            return
-        }
-
-        val endAt = SystemClock.elapsedRealtime() + minutes * 60_000L
+        val safeMinutes = minutes?.coerceIn(1, PlaybackService.MAX_SLEEP_MINUTES)
         _playerState.update {
             it.copy(
-                sleepTimerMinutes = minutes,
-                sleepRemainingMs = minutes * 60_000L,
+                sleepTimerMinutes = safeMinutes,
+                sleepRemainingMs = safeMinutes?.times(60_000L),
                 isFadingOut = false,
             )
         }
-        controller?.volume = 1f
-
-        sleepJob = viewModelScope.launch {
-            while (isActive) {
-                val remaining = endAt - SystemClock.elapsedRealtime()
-                if (remaining <= 0L) break
-                _playerState.update { it.copy(sleepRemainingMs = remaining) }
-                delay(1_000L)
-            }
-            if (!isActive) return@launch
-            _playerState.update { it.copy(sleepRemainingMs = 0L) }
-            fadeOutAndStop()
-        }
+        sendSleepTimer(safeMinutes)
     }
 
-    private suspend fun fadeOutAndStop() {
+    private fun sendSleepTimer(minutes: Int?) {
         val c = controller
         if (c == null) {
-            clearSleepTimerState()
+            queuedSleepMinutes = minutes
+            sleepQueuePending = true
             return
         }
-
-        _playerState.update { it.copy(isFadingOut = true) }
-
-        val startVolume = c.volume.coerceIn(0.05f, 1f)
-        for (i in 1..FADE_STEPS) {
-            if (!isActive) return
-            c.volume = startVolume * (1f - i.toFloat() / FADE_STEPS)
-            delay(FADE_STEP_MS)
+        sleepQueuePending = false
+        val args = Bundle().apply {
+            putInt(
+                PlaybackService.EXTRA_SLEEP_MINUTES,
+                minutes ?: PlaybackService.SLEEP_TIMER_OFF,
+            )
         }
-
-        if (!isActive) return
-        c.pause()
-        c.volume = 1f
-        clearSleepTimerState()
+        viewModelScope.launch {
+            runCatching {
+                c.sendCustomCommand(
+                    SessionCommand(PlaybackService.ACTION_SET_SLEEP_TIMER, Bundle.EMPTY),
+                    args,
+                ).await()
+            }
+        }
     }
 
-    private fun abortFadeIfNeeded() {
-        if (!_playerState.value.isFadingOut) return
-        sleepJob?.cancel()
-        sleepJob = null
-        controller?.volume = 1f
-        clearSleepTimerState()
-    }
-
-    private fun clearSleepTimerState() {
+    private fun applySleepExtras(extras: Bundle) {
+        val minutes = extras.getInt(
+            PlaybackService.EXTRA_SLEEP_MINUTES,
+            PlaybackService.SLEEP_TIMER_OFF,
+        )
+        val fading = extras.getBoolean(PlaybackService.EXTRA_SLEEP_FADING, false)
+        val remaining = if (extras.containsKey(PlaybackService.EXTRA_SLEEP_REMAINING_MS)) {
+            extras.getLong(PlaybackService.EXTRA_SLEEP_REMAINING_MS)
+        } else {
+            null
+        }
         _playerState.update {
             it.copy(
-                sleepTimerMinutes = null,
-                sleepRemainingMs = null,
-                isFadingOut = false,
+                sleepTimerMinutes = minutes.takeIf { value -> value > 0 },
+                sleepRemainingMs = if (minutes > 0) remaining else null,
+                isFadingOut = fading && minutes > 0,
             )
         }
     }
@@ -301,16 +265,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             it.copy(
                 isPlaying = c.isPlaying,
                 selectedId = sound?.id ?: it.selectedId,
-                title = sound?.title ?: c.mediaMetadata.title?.toString() ?: it.title,
-                subtitle = sound?.subtitle
-                    ?: c.mediaMetadata.artist?.toString()
-                    ?: it.subtitle,
             )
         }
     }
 
     override fun onCleared() {
-        sleepJob?.cancel()
         controller?.removeListener(playerListener)
         controllerFuture?.let { MediaController.releaseFuture(it) }
         controller = null
@@ -318,10 +277,4 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         super.onCleared()
     }
 
-    companion object {
-        private const val FADE_STEPS = 30
-        private const val FADE_STEP_MS = 400L
-
-        val SLEEP_TIMER_OPTIONS_MINUTES: List<Int> = listOf(15, 30, 45)
-    }
 }

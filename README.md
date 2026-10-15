@@ -41,11 +41,13 @@ UI (Compose) ──MediaController──► MediaSessionService (PlaybackService
 ```kotlin
 RelaxationSound(
     id = "brown_noise",
-    title = "Brown Noise",
-    subtitle = "Deep rumble",
+    titleRes = R.string.sound_brown_noise_title,
+    subtitleRes = R.string.sound_brown_noise_subtitle,
     source = SoundSource.Asset("sounds/brown_noise.ogg"),
 )
 ```
+
+Dopisz te same klucze w `values/strings.xml` (angielski, język domyślny) i w `values-pl/strings.xml`. Aplikacja bierze język z ustawień telefonu.
 
 ### Raw resources
 

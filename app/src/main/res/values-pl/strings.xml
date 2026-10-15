@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_notification_channel">Odtwarzanie</string>
+    <string name="playback_notification_channel_desc">Sterowanie dźwiękiem relaksacyjnym</string>
+    <string name="tagline">Cichy wieczór. Głęboki odpoczynek.</string>
+    <string name="play">Odtwórz</string>
+    <string name="pause">Wstrzymaj</string>
+    <string name="select_sound">Dźwięki</string>
+    <string name="now_playing">Odtwarzanie</string>
+    <string name="looping">Pętla · oszczędne dla baterii</string>
+    <string name="notification_permission_rationale">Powiadomienia są potrzebne do sterowania odtwarzaniem przy wyłączonym ekranie.</string>
+    <string name="grant_notifications">Zezwól na powiadomienia</string>
+    <string name="sleep_timer">Wyłącznik czasowy</string>
+    <string name="sleep_off">Wył.</string>
+    <string name="sleep_timer_pick">Ustaw czas</string>
+    <string name="sleep_timer_hours">Godziny</string>
+    <string name="sleep_timer_minutes_label">Minuty</string>
+    <string name="sleep_timer_start">Włącz</string>
+    <string name="sleep_hour_cd">%1$d godz.</string>
+    <string name="sleep_minute_cd">%1$d min</string>
+    <string name="sleep_fading">Wyciszanie…</string>
+    <string name="premium">Premium</string>
+    <string name="premium_active">Premium aktywne</string>
+    <string name="premium_title">Medsound Premium</string>
+    <string name="premium_body">Jednorazowy zakup usuwa reklamy na zawsze i odblokowuje ekstra dźwięki.</string>
+    <string name="premium_buy">Kup Premium</string>
+    <string name="premium_buy_priced">Kup Premium · %1$s</string>
+    <string name="premium_close">Nie teraz</string>
+    <string name="premium_locked">Ekstra · Premium</string>
+    <string name="premium_benefits_ads">Bez reklam</string>
+    <string name="premium_benefits_extra">Ekstra dźwięki</string>
+    <string name="locked_content_cd">Zablokowane — wymaga Premium</string>
+    <string name="billing_error_missing_product">Brak produktu Premium w Play Console</string>
+    <string name="billing_error_unavailable">Produkt Premium niedostępny</string>
+    <string name="billing_error_no_offer">Brak oferty zakupu Premium</string>
+
+    <string name="sound_rain_title">Deszcz</string>
+    <string name="sound_rain_subtitle">Delikatne krople</string>
+    <string name="sound_white_noise_title">Biały szum</string>
+    <string name="sound_white_noise_subtitle">Równe spektrum</string>
+    <string name="sound_ocean_title">Fale oceanu</string>
+    <string name="sound_ocean_subtitle">Odległy brzeg</string>
+    <string name="sound_fan_title">Dźwięk wentylatora</string>
+    <string name="sound_fan_subtitle">Cichy nadmuch</string>
+    <string name="sound_brown_noise_title">Szum brązowy</string>
+    <string name="sound_brown_noise_subtitle">Głęboki szum · ekstra</string>
+    <string name="sound_campfire_title">Ognisko</string>
+    <string name="sound_campfire_subtitle">Trzask drewna · ekstra</string>
+</resources>

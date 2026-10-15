@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,7 +52,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +63,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.medsound.app.R
@@ -64,7 +73,6 @@ import com.medsound.app.data.RelaxationSound
 import com.medsound.app.data.SoundIconKind
 import com.medsound.app.data.isLocked
 import com.medsound.app.player.PlayerUiState
-import com.medsound.app.player.PlayerViewModel
 import com.medsound.app.ui.ads.AdMobBanner
 import com.medsound.app.ui.theme.MedsoundColors
 import java.util.Locale
@@ -146,11 +154,12 @@ fun MedsoundScreen(
             onSelect = onSetSleepTimer,
         )
 
+        val selectedSound = state.sounds.find { it.id == state.selectedId }
+            ?: state.sounds.first()
         BottomPlayerBar(
-            title = state.title,
-            subtitle = state.subtitle,
-            icon = state.sounds.find { it.id == state.selectedId }?.icon
-                ?: SoundIconKind.Rain,
+            title = stringResource(selectedSound.titleRes),
+            subtitle = stringResource(selectedSound.subtitleRes),
+            icon = selectedSound.icon,
             isPlaying = state.isPlaying || state.isFadingOut,
             enabled = state.isConnected,
             onTogglePlayPause = onTogglePlayPause,
@@ -278,7 +287,7 @@ private fun SoundRow(
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = sound.title,
+                text = stringResource(sound.titleRes),
                 style = MaterialTheme.typography.titleLarge,
                 color = if (locked) {
                     MedsoundColors.Foam.copy(alpha = 0.55f)
@@ -292,7 +301,7 @@ private fun SoundRow(
                 text = if (locked) {
                     stringResource(R.string.premium_locked)
                 } else {
-                    sound.subtitle
+                    stringResource(sound.subtitleRes)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MedsoundColors.FoamDim,
@@ -351,6 +360,9 @@ private fun SleepTimerSection(
     isFadingOut: Boolean,
     onSelect: (Int?) -> Unit,
 ) {
+    var showPicker by remember { mutableIntStateOf(0) }
+    val pickerOpen = showPicker > 0
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -392,16 +404,130 @@ private fun SleepTimerSection(
         ) {
             TimerChip(
                 label = stringResource(R.string.sleep_off),
-                selected = selectedMinutes == null,
+                selected = selectedMinutes == null && !isFadingOut,
                 onClick = { onSelect(null) },
+                modifier = Modifier.width(96.dp),
+            )
+            val durationLabel = if (selectedMinutes != null) {
+                formatDuration(selectedMinutes)
+            } else {
+                stringResource(R.string.sleep_timer_pick)
+            }
+            TimerChip(
+                label = durationLabel,
+                selected = selectedMinutes != null || isFadingOut,
+                onClick = { showPicker++ },
                 modifier = Modifier.weight(1f),
             )
-            PlayerViewModel.SLEEP_TIMER_OPTIONS_MINUTES.forEach { minutes ->
-                TimerChip(
-                    label = stringResource(R.string.sleep_minutes, minutes),
-                    selected = selectedMinutes == minutes,
-                    onClick = { onSelect(minutes) },
-                    modifier = Modifier.weight(1f),
+        }
+    }
+
+    if (pickerOpen) {
+        SleepDurationSheet(
+            initialMinutes = selectedMinutes ?: 60,
+            onDismiss = { showPicker = 0 },
+            onConfirm = { totalMinutes ->
+                showPicker = 0
+                onSelect(totalMinutes)
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SleepDurationSheet(
+    initialMinutes: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit,
+) {
+    var hours by remember { mutableIntStateOf((initialMinutes / 60).coerceIn(0, 12)) }
+    var minutes by remember { mutableIntStateOf((initialMinutes % 60).coerceIn(0, 59)) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MedsoundColors.NightMid,
+        contentColor = MedsoundColors.Foam,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 28.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.sleep_timer),
+                style = MaterialTheme.typography.titleLarge,
+                color = MedsoundColors.Foam,
+            )
+            Text(
+                text = formatDuration(hours * 60 + minutes),
+                style = MaterialTheme.typography.displayLarge,
+                color = MedsoundColors.Foam,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.sleep_timer_hours),
+                style = MaterialTheme.typography.labelLarge,
+                color = MedsoundColors.FoamDim,
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+            )
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items((0..12).toList()) { hour ->
+                    TimerChip(
+                        label = "%02d".format(Locale.getDefault(), hour),
+                        selected = hour == hours,
+                        onClick = { hours = hour },
+                        contentDescription = stringResource(R.string.sleep_hour_cd, hour),
+                        modifier = Modifier.width(56.dp),
+                    )
+                }
+            }
+            Text(
+                text = stringResource(R.string.sleep_timer_minutes_label),
+                style = MaterialTheme.typography.labelLarge,
+                color = MedsoundColors.FoamDim,
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(6),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(196.dp),
+            ) {
+                gridItems((0..59).toList()) { minute ->
+                    TimerChip(
+                        label = "%02d".format(Locale.getDefault(), minute),
+                        selected = minute == minutes,
+                        onClick = { minutes = minute },
+                        contentDescription = stringResource(R.string.sleep_minute_cd, minute),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { onConfirm(hours * 60 + minutes) },
+                enabled = hours > 0 || minutes > 0,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MedsoundColors.Mist,
+                    contentColor = MedsoundColors.NightDeep,
+                    disabledContainerColor = MedsoundColors.NightElevated,
+                    disabledContentColor = MedsoundColors.FoamDim,
+                ),
+                shape = RoundedCornerShape(14.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.sleep_timer_start),
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
         }
@@ -414,6 +540,7 @@ private fun TimerChip(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    contentDescription: String? = null,
 ) {
     val bg by animateColorAsState(
         targetValue = if (selected) MedsoundColors.SeaAccent.copy(alpha = 0.55f) else MedsoundColors.NightMid,
@@ -432,7 +559,14 @@ private fun TimerChip(
                 color = if (selected) MedsoundColors.Mist.copy(alpha = 0.35f) else Color.Transparent,
                 shape = RoundedCornerShape(20.dp),
             )
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .then(
+                if (contentDescription != null) {
+                    Modifier.semantics { this.contentDescription = contentDescription }
+                } else {
+                    Modifier
+                },
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -617,7 +751,18 @@ private fun SoundIconKind.toImageVector(): ImageVector = when (this) {
 
 private fun formatRemaining(ms: Long): String {
     val totalSec = TimeUnit.MILLISECONDS.toSeconds(ms.coerceAtLeast(0L))
-    val minutes = totalSec / 60
+    val hours = totalSec / 3600
+    val minutes = (totalSec % 3600) / 60
     val seconds = totalSec % 60
-    return String.format(Locale.getDefault(), "%d:%02d", minutes, seconds)
+    return if (hours > 0) {
+        String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds)
+    } else {
+        String.format(Locale.getDefault(), "%d:%02d", minutes, seconds)
+    }
+}
+
+private fun formatDuration(totalMinutes: Int): String {
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return String.format(Locale.getDefault(), "%02d:%02d", hours, minutes)
 }

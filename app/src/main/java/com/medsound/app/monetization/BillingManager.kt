@@ -17,6 +17,7 @@ import com.android.billingclient.api.acknowledgePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
 import com.medsound.app.BuildConfig
+import com.medsound.app.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -130,7 +131,11 @@ class BillingManager(
             it.copy(
                 premiumPriceLabel = price,
                 canPurchase = details != null && !it.isPremium,
-                lastError = if (details == null) "Brak produktu Premium w Play Console" else null,
+                lastError = if (details == null) {
+                    appContext.getString(R.string.billing_error_missing_product)
+                } else {
+                    null
+                },
             )
         }
     }
@@ -159,14 +164,18 @@ class BillingManager(
     fun launchPremiumPurchase(activity: Activity) {
         val details = productDetails
         if (details == null) {
-            _state.update { it.copy(lastError = "Produkt Premium niedostępny") }
+            _state.update {
+                it.copy(lastError = appContext.getString(R.string.billing_error_unavailable))
+            }
             return
         }
         val offer = details.oneTimePurchaseOfferDetailsList?.firstOrNull()
             ?: details.oneTimePurchaseOfferDetails
         val offerToken = offer?.offerToken
         if (offerToken.isNullOrBlank()) {
-            _state.update { it.copy(lastError = "Brak oferty zakupu Premium") }
+            _state.update {
+                it.copy(lastError = appContext.getString(R.string.billing_error_no_offer))
+            }
             return
         }
 
