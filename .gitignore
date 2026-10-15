@@ -5,6 +5,8 @@ build/
 local.properties
 *.iml
 .idea/
+.vscode/
+
 .DS_Store
 captures/
 .externalNativeBuild/
@@ -17,6 +19,7 @@ captures/
 bin/
 gen/
 out/
+mp3/
 .navigation/
 *.hprof
 *.log
