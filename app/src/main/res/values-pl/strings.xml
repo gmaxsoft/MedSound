@@ -40,6 +40,8 @@
     <string name="category_space">NASA Voyager</string>
     <string name="category_space_detail">Planety z misji NASA Voyager</string>
     <string name="category_plane">Samoloty</string>
+    <string name="category_healing">Częstotliwości</string>
+    <string name="category_healing_detail">Generator częstotliwości</string>
 
     <string name="sound_blizzard_snow_title">Zamieć śnieżna</string>
     <string name="sound_thunderstorm_title">Burza z deszczem</string>
@@ -47,6 +49,7 @@
     <string name="sound_beach_waves_title">Plaża z falami</string>
     <string name="sound_small_cascade_title">Mała kaskada</string>
     <string name="sound_small_waterfall_title">Mały wodospad</string>
+    <string name="sound_cat_purring_title">Mruczenie kota</string>
     <string name="sound_engine_room_title">Maszynownia</string>
     <string name="sound_factory_fan_title">Wentylator fabryczny</string>
     <string name="sound_factory_sounds_title">Odgłosy fabryki</string>

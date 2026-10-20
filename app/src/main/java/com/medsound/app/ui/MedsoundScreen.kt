@@ -36,9 +36,11 @@ import androidx.compose.material.icons.rounded.DirectionsBoat
 import androidx.compose.material.icons.rounded.Dry
 import androidx.compose.material.icons.rounded.Factory
 import androidx.compose.material.icons.rounded.Flight
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.LocalLaundryService
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.Pets
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PrecisionManufacturing
 import androidx.compose.material.icons.rounded.Public
@@ -824,8 +826,10 @@ private fun SoundIconKind.toImageVector(): ImageVector = when (this) {
     SoundIconKind.Train -> Icons.Rounded.Train
     SoundIconKind.Vacuum -> Icons.Rounded.CleaningServices
     SoundIconKind.Washer -> Icons.Rounded.LocalLaundryService
+    SoundIconKind.Cat -> Icons.Rounded.Pets
     SoundIconKind.Plane -> Icons.Rounded.Flight
     SoundIconKind.Planet -> Icons.Rounded.Public
+    SoundIconKind.Tone -> Icons.Rounded.GraphicEq
 }
 
 private fun formatRemaining(ms: Long): String {

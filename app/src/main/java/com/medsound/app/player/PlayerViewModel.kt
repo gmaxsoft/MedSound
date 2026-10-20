@@ -15,9 +15,12 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.medsound.app.MedsoundApplication
 import com.medsound.app.data.RelaxationSound
 import com.medsound.app.data.SoundCatalog
+import com.medsound.app.data.SoundSource
+import com.medsound.app.data.ToneLoop
 import com.medsound.app.data.isLocked
 import com.medsound.app.data.toMediaItem
 import com.medsound.app.media.PlaybackService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -105,6 +108,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     init {
         connect()
         interstitialAds.ensureInitialized()
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>()
+            SoundCatalog.sounds.forEach { sound ->
+                val tone = sound.source as? SoundSource.Tone ?: return@forEach
+                ToneLoop.file(context, tone.frequencyHz)
+            }
+        }
         viewModelScope.launch {
             billing.state
                 .map { it.isPremium }

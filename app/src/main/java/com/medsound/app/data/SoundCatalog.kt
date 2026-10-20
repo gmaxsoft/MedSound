@@ -16,6 +16,7 @@ import com.medsound.app.R
 sealed class SoundSource {
     data class Asset(val assetPath: String) : SoundSource()
     data class Raw(@RawRes val resId: Int) : SoundSource()
+    data class Tone(val frequencyHz: Int) : SoundSource()
 }
 
 enum class SoundCategory(
@@ -27,6 +28,7 @@ enum class SoundCategory(
     Industrial(R.string.category_industrial),
     Space(R.string.category_space, R.string.category_space_detail),
     Plane(R.string.category_plane),
+    Healing(R.string.category_healing, R.string.category_healing_detail),
 }
 
 enum class SoundIconKind {
@@ -43,8 +45,10 @@ enum class SoundIconKind {
     Train,
     Vacuum,
     Washer,
+    Cat,
     Plane,
     Planet,
+    Tone,
 }
 
 data class RelaxationSound(
@@ -102,6 +106,13 @@ object SoundCatalog {
             category = SoundCategory.Nature,
             titleRes = R.string.sound_small_waterfall_title,
             icon = SoundIconKind.Water,
+        ),
+        track(
+            id = "cat-purring",
+            file = "nature/cat-purring.ogg",
+            category = SoundCategory.Nature,
+            titleRes = R.string.sound_cat_purring_title,
+            icon = SoundIconKind.Cat,
         ),
         track(
             id = "engine-room",
@@ -239,6 +250,10 @@ object SoundCatalog {
             icon = SoundIconKind.Plane,
             requiresPremium = true,
         ),
+        tone(id = "tone-432", frequencyHz = 432, titleRes = R.string.sound_tone_432_title),
+        tone(id = "tone-963", frequencyHz = 963, titleRes = R.string.sound_tone_963_title),
+        tone(id = "tone-528", frequencyHz = 528, titleRes = R.string.sound_tone_528_title),
+        tone(id = "tone-852", frequencyHz = 852, titleRes = R.string.sound_tone_852_title),
     )
 
     fun findById(id: String): RelaxationSound? = sounds.find { it.id == id }
@@ -261,12 +276,27 @@ object SoundCatalog {
         source = SoundSource.Asset(file),
         requiresPremium = requiresPremium || category == SoundCategory.Plane,
     )
+
+    private fun tone(
+        id: String,
+        frequencyHz: Int,
+        titleRes: Int,
+    ) = RelaxationSound(
+        id = id,
+        titleRes = titleRes,
+        subtitleRes = SoundCategory.Healing.titleRes,
+        icon = SoundIconKind.Tone,
+        category = SoundCategory.Healing,
+        source = SoundSource.Tone(frequencyHz),
+        requiresPremium = true,
+    )
 }
 
 fun RelaxationSound.toMediaItem(context: Context, clipEndMs: Long? = null): MediaItem {
     val uri = when (val src = source) {
         is SoundSource.Asset -> "asset:///${src.assetPath}"
         is SoundSource.Raw -> "android.resource://${context.packageName}/${src.resId}"
+        is SoundSource.Tone -> ToneLoop.file(context, src.frequencyHz).toURI().toString()
     }
 
     return MediaItem.Builder()

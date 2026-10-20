@@ -41,6 +41,12 @@
     <string name="category_space">NASA Voyager</string>
     <string name="category_space_detail">Planet Sounds from NASA\'s Voyager Mission</string>
     <string name="category_plane">Aircraft</string>
+    <string name="category_healing">Healing</string>
+    <string name="category_healing_detail">Tone generator</string>
+    <string name="sound_tone_432_title" translatable="false">432 Hz</string>
+    <string name="sound_tone_528_title" translatable="false">528 Hz</string>
+    <string name="sound_tone_852_title" translatable="false">852 Hz</string>
+    <string name="sound_tone_963_title" translatable="false">963 Hz</string>
 
     <string name="sound_blizzard_snow_title">Blizzard snow</string>
     <string name="sound_thunderstorm_title">Thunderstorm</string>
@@ -48,6 +54,7 @@
     <string name="sound_beach_waves_title">Beach with waves</string>
     <string name="sound_small_cascade_title">Small cascade</string>
     <string name="sound_small_waterfall_title">Small waterfall</string>
+    <string name="sound_cat_purring_title">Cat purring</string>
     <string name="sound_engine_room_title">Engine room</string>
     <string name="sound_factory_fan_title">Factory fan</string>
     <string name="sound_factory_sounds_title">Factory sounds</string>
