@@ -68,6 +68,13 @@ android {
         generateLocaleConfig = true
     }
 
+    sourceSets {
+        getByName("main") {
+            // Seamless loops (.ogg, .wav, and similar) live in the project audio folder.
+            assets.srcDir("../audio")
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

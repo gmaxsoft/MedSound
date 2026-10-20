@@ -20,6 +20,7 @@ private val mistSoftColor = Color(0xFF8FA8B3)
 private val foamColor = Color(0xFFD4DEE4)
 private val foamDimColor = Color(0xFF9AA8B0)
 private val seaAccentColor = Color(0xFF3A6574)
+private val premiumActiveColor = Color(0xFF2F9E6B)
 
 private val DarkColors = darkColorScheme(
     primary = mistColor,
@@ -103,4 +104,5 @@ object MedsoundColors {
     val Foam = foamColor
     val FoamDim = foamDimColor
     val SeaAccent = seaAccentColor
+    val PremiumActive = premiumActiveColor
 }

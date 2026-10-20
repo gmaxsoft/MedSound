@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.guava.await
@@ -88,6 +90,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             controller?.let { syncFromController(it) }
+            if (playbackState == Player.STATE_ENDED && isCurrentDemo()) {
+                _playerState.update { it.copy(showPremiumSheet = true) }
+            }
         }
     }
 
@@ -100,6 +105,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     init {
         connect()
         interstitialAds.ensureInitialized()
+        viewModelScope.launch {
+            billing.state
+                .map { it.isPremium }
+                .distinctUntilChanged()
+                .collect { premium ->
+                    if (premium) expandDemoToFullTrack()
+                }
+        }
     }
 
     fun connect() {
@@ -143,7 +156,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             c.pause()
         } else {
             c.volume = 1f
-            if (c.playbackState == Player.STATE_IDLE) {
+            if (c.playbackState == Player.STATE_IDLE || c.playbackState == Player.STATE_ENDED) {
+                if (c.playbackState == Player.STATE_ENDED) {
+                    c.seekTo(0)
+                }
                 c.prepare()
             }
             c.play()
@@ -151,18 +167,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     /**
-     * Wybór dźwięku: kłódka → arkusz Premium;
-     * free → interstitial (jeśli gotowy), potem odtwarzanie;
-     * Premium → od razu play.
+     * Free sounds may show an interstitial. Premium sounds without a purchase
+     * play as a 15s demo. A purchase skips ads and plays the full loop.
      */
     fun onSoundClicked(activity: Activity, sound: RelaxationSound) {
         val isPremium = billing.state.value.isPremium
-        if (sound.isLocked(isPremium)) {
-            _playerState.update { it.copy(showPremiumSheet = true) }
-            return
-        }
-
-        if (isPremium) {
+        if (isPremium || sound.requiresPremium) {
             selectSound(sound)
             return
         }
@@ -174,19 +184,41 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun selectSound(sound: RelaxationSound) {
         val c = controller ?: return
-        if (sound.isLocked(billing.state.value.isPremium)) return
-
-        val item = sound.toMediaItem(getApplication())
+        val demo = sound.isLocked(billing.state.value.isPremium)
+        val item = sound.toMediaItem(
+            getApplication(),
+            clipEndMs = if (demo) DEMO_LIMIT_MS else null,
+        )
 
         if (_playerState.value.isFadingOut) {
             sendSleepTimer(null)
         }
         c.volume = 1f
+        c.repeatMode = if (demo) Player.REPEAT_MODE_OFF else Player.REPEAT_MODE_ONE
         c.setMediaItem(item)
         c.prepare()
         c.play()
 
         _playerState.update { it.copy(selectedId = sound.id) }
+    }
+
+    private fun isCurrentDemo(): Boolean {
+        val id = controller?.currentMediaItem?.mediaId ?: _playerState.value.selectedId
+        val sound = SoundCatalog.findById(id) ?: return false
+        return sound.isLocked(billing.state.value.isPremium)
+    }
+
+    private fun expandDemoToFullTrack() {
+        val c = controller ?: return
+        val sound = c.currentMediaItem?.mediaId?.let(SoundCatalog::findById) ?: return
+        if (!sound.requiresPremium) return
+        val position = c.currentPosition
+        val wasPlaying = c.isPlaying || c.playWhenReady
+        c.repeatMode = Player.REPEAT_MODE_ONE
+        c.setMediaItem(sound.toMediaItem(getApplication()))
+        c.prepare()
+        c.seekTo(position)
+        if (wasPlaying) c.play()
     }
 
     fun openPremiumSheet() {
@@ -277,4 +309,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         super.onCleared()
     }
 
+    companion object {
+        const val DEMO_LIMIT_MS = 15_000L
+    }
 }

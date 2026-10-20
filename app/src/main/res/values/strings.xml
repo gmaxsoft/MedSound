@@ -3,7 +3,7 @@
     <string name="app_name" translatable="false">Medsound</string>
     <string name="playback_notification_channel">Playback</string>
     <string name="playback_notification_channel_desc">Relaxation sound controls</string>
-    <string name="tagline">A quiet evening. Deep rest.</string>
+    <string name="tagline">Sound that heals — a stress-reducing app.</string>
     <string name="play">Play</string>
     <string name="pause">Pause</string>
     <string name="select_sound">Sounds</string>
@@ -27,7 +27,7 @@
     <string name="premium_buy">Get Premium</string>
     <string name="premium_buy_priced">Get Premium · %1$s</string>
     <string name="premium_close">Not now</string>
-    <string name="premium_locked">Extra · Premium</string>
+    <string name="premium_locked">15s demo</string>
     <string name="premium_benefits_ads">No ads</string>
     <string name="premium_benefits_extra">Extra sounds</string>
     <string name="locked_content_cd">Locked — requires Premium</string>
@@ -35,16 +35,36 @@
     <string name="billing_error_unavailable">Premium is unavailable</string>
     <string name="billing_error_no_offer">Premium purchase offer is unavailable</string>
 
-    <string name="sound_rain_title">Rain</string>
-    <string name="sound_rain_subtitle">Soft drops</string>
-    <string name="sound_white_noise_title">White noise</string>
-    <string name="sound_white_noise_subtitle">Even spectrum</string>
-    <string name="sound_ocean_title">Ocean waves</string>
-    <string name="sound_ocean_subtitle">Distant shore</string>
-    <string name="sound_fan_title">Fan</string>
-    <string name="sound_fan_subtitle">Quiet airflow</string>
-    <string name="sound_brown_noise_title">Brown noise</string>
-    <string name="sound_brown_noise_subtitle">Deep rumble · extra</string>
-    <string name="sound_campfire_title">Campfire</string>
-    <string name="sound_campfire_subtitle">Crackling wood · extra</string>
+    <string name="category_weather">Weather</string>
+    <string name="category_nature">Nature</string>
+    <string name="category_industrial">Machines</string>
+    <string name="category_space">NASA Voyager</string>
+    <string name="category_space_detail">Planet Sounds from NASA\'s Voyager Mission</string>
+    <string name="category_plane">Aircraft</string>
+
+    <string name="sound_blizzard_snow_title">Blizzard snow</string>
+    <string name="sound_thunderstorm_title">Thunderstorm</string>
+    <string name="sound_heavy_rain_title">Heavy rain</string>
+    <string name="sound_beach_waves_title">Beach with waves</string>
+    <string name="sound_small_cascade_title">Small cascade</string>
+    <string name="sound_small_waterfall_title">Small waterfall</string>
+    <string name="sound_engine_room_title">Engine room</string>
+    <string name="sound_factory_fan_title">Factory fan</string>
+    <string name="sound_factory_sounds_title">Factory sounds</string>
+    <string name="sound_fan_noise_title">Fan noise</string>
+    <string name="sound_hair_dryer_title">Hair dryer</string>
+    <string name="sound_ship_engine_title">Ship engine</string>
+    <string name="sound_train_blizzard_title">Train and blizzard</string>
+    <string name="sound_vacuum_cleaner_title">Vacuum cleaner</string>
+    <string name="sound_vacuum_cleaner_2_title">Vacuum cleaner 2</string>
+    <string name="sound_washing_machine_title">Washing machine</string>
+    <string name="sound_airbus_title">Airbus cabin</string>
+    <string name="sound_b17_title">B-17 bomber</string>
+    <string name="sound_b29_title">B-29 Superfortress</string>
+    <string name="sound_jupiter_title">Jupiter</string>
+    <string name="sound_mars_title">Mars</string>
+    <string name="sound_mercury_title">Mercury</string>
+    <string name="sound_neptune_title">Neptune</string>
+    <string name="sound_uranus_title">Uranus</string>
+    <string name="sound_venus_title">Venus</string>
 </resources>

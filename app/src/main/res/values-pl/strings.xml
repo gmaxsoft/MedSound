@@ -2,7 +2,7 @@
 <resources>
     <string name="playback_notification_channel">Odtwarzanie</string>
     <string name="playback_notification_channel_desc">Sterowanie dźwiękiem relaksacyjnym</string>
-    <string name="tagline">Cichy wieczór. Głęboki odpoczynek.</string>
+    <string name="tagline">Dźwięk, który leczy — aplikacja redukująca stres.</string>
     <string name="play">Odtwórz</string>
     <string name="pause">Wstrzymaj</string>
     <string name="select_sound">Dźwięki</string>
@@ -26,7 +26,7 @@
     <string name="premium_buy">Kup Premium</string>
     <string name="premium_buy_priced">Kup Premium · %1$s</string>
     <string name="premium_close">Nie teraz</string>
-    <string name="premium_locked">Ekstra · Premium</string>
+    <string name="premium_locked">Demo 15 s</string>
     <string name="premium_benefits_ads">Bez reklam</string>
     <string name="premium_benefits_extra">Ekstra dźwięki</string>
     <string name="locked_content_cd">Zablokowane — wymaga Premium</string>
@@ -34,16 +34,36 @@
     <string name="billing_error_unavailable">Produkt Premium niedostępny</string>
     <string name="billing_error_no_offer">Brak oferty zakupu Premium</string>
 
-    <string name="sound_rain_title">Deszcz</string>
-    <string name="sound_rain_subtitle">Delikatne krople</string>
-    <string name="sound_white_noise_title">Biały szum</string>
-    <string name="sound_white_noise_subtitle">Równe spektrum</string>
-    <string name="sound_ocean_title">Fale oceanu</string>
-    <string name="sound_ocean_subtitle">Odległy brzeg</string>
-    <string name="sound_fan_title">Dźwięk wentylatora</string>
-    <string name="sound_fan_subtitle">Cichy nadmuch</string>
-    <string name="sound_brown_noise_title">Szum brązowy</string>
-    <string name="sound_brown_noise_subtitle">Głęboki szum · ekstra</string>
-    <string name="sound_campfire_title">Ognisko</string>
-    <string name="sound_campfire_subtitle">Trzask drewna · ekstra</string>
+    <string name="category_weather">Pogoda</string>
+    <string name="category_nature">Natura</string>
+    <string name="category_industrial">Maszyny</string>
+    <string name="category_space">NASA Voyager</string>
+    <string name="category_space_detail">Planety z misji NASA Voyager</string>
+    <string name="category_plane">Samoloty</string>
+
+    <string name="sound_blizzard_snow_title">Zamieć śnieżna</string>
+    <string name="sound_thunderstorm_title">Burza z deszczem</string>
+    <string name="sound_heavy_rain_title">Ulewny deszcz</string>
+    <string name="sound_beach_waves_title">Plaża z falami</string>
+    <string name="sound_small_cascade_title">Mała kaskada</string>
+    <string name="sound_small_waterfall_title">Mały wodospad</string>
+    <string name="sound_engine_room_title">Maszynownia</string>
+    <string name="sound_factory_fan_title">Wentylator fabryczny</string>
+    <string name="sound_factory_sounds_title">Odgłosy fabryki</string>
+    <string name="sound_fan_noise_title">Szum wentylatora</string>
+    <string name="sound_hair_dryer_title">Suszarka</string>
+    <string name="sound_ship_engine_title">Silnik statku</string>
+    <string name="sound_train_blizzard_title">Pociąg i zamieć</string>
+    <string name="sound_vacuum_cleaner_title">Odkurzacz</string>
+    <string name="sound_vacuum_cleaner_2_title">Odkurzacz 2</string>
+    <string name="sound_washing_machine_title">Pralka</string>
+    <string name="sound_airbus_title">Szum Airbusa</string>
+    <string name="sound_b17_title">Bombowiec B-17</string>
+    <string name="sound_b29_title">B-29 Superfortress</string>
+    <string name="sound_jupiter_title">Jowisz</string>
+    <string name="sound_mars_title">Mars</string>
+    <string name="sound_mercury_title">Merkury</string>
+    <string name="sound_neptune_title">Neptun</string>
+    <string name="sound_uranus_title">Uran</string>
+    <string name="sound_venus_title">Wenus</string>
 </resources>

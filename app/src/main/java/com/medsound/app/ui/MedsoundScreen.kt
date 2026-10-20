@@ -29,13 +29,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AcUnit
 import androidx.compose.material.icons.rounded.Air
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.CleaningServices
+import androidx.compose.material.icons.rounded.DirectionsBoat
+import androidx.compose.material.icons.rounded.Dry
+import androidx.compose.material.icons.rounded.Factory
+import androidx.compose.material.icons.rounded.Flight
+import androidx.compose.material.icons.rounded.LocalLaundryService
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.PrecisionManufacturing
+import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Thunderstorm
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.Train
+import androidx.compose.material.icons.rounded.Water
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.Waves
 import androidx.compose.material.icons.rounded.WorkspacePremium
@@ -61,15 +71,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.medsound.app.R
 import com.medsound.app.data.RelaxationSound
+import com.medsound.app.data.SoundCategory
 import com.medsound.app.data.SoundIconKind
 import com.medsound.app.data.isLocked
 import com.medsound.app.player.PlayerUiState
@@ -136,14 +154,19 @@ fun MedsoundScreen(
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
-            items(state.sounds, key = { it.id }) { sound ->
-                val locked = sound.isLocked(state.isPremium)
-                SoundRow(
-                    sound = sound,
-                    selected = sound.id == state.selectedId,
-                    locked = locked,
-                    onClick = { onSelectSound(sound) },
-                )
+            state.sounds.groupBy { it.category }.forEach { (category, sounds) ->
+                item(key = "category-${category.name}") {
+                    CategoryHeader(category)
+                }
+                items(sounds, key = { it.id }) { sound ->
+                    val locked = sound.isLocked(state.isPremium)
+                    SoundRow(
+                        sound = sound,
+                        selected = sound.id == state.selectedId,
+                        locked = locked,
+                        onClick = { onSelectSound(sound) },
+                    )
+                }
             }
         }
 
@@ -194,56 +217,80 @@ private fun Header(
     isPremium: Boolean,
     onOpenPremium: () -> Unit,
 ) {
-    Row(
+    val chipColor = if (isPremium) {
+        MedsoundColors.PremiumActive
+    } else {
+        MedsoundColors.SeaAccent.copy(alpha = 0.45f)
+    }
+    val chipContent = if (isPremium) MedsoundColors.NightDeep else MedsoundColors.Foam
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.displayLarge,
-                color = MedsoundColors.Foam,
-            )
-            Text(
-                text = stringResource(R.string.tagline),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MedsoundColors.FoamDim,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-        }
-
-        if (isPremium) {
-            Text(
-                text = stringResource(R.string.premium_active),
-                style = MaterialTheme.typography.labelMedium,
-                color = MedsoundColors.Mist,
-            )
-        } else {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BrandLockup(modifier = Modifier.weight(1f))
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(MedsoundColors.SeaAccent.copy(alpha = 0.45f))
-                    .clickable(onClick = onOpenPremium)
+                    .background(chipColor)
+                    .clickable(enabled = !isPremium, onClick = onOpenPremium)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Rounded.WorkspacePremium,
                         contentDescription = null,
-                        tint = MedsoundColors.Foam,
+                        tint = chipContent,
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = stringResource(R.string.premium),
                         style = MaterialTheme.typography.labelLarge,
-                        color = MedsoundColors.Foam,
+                        color = chipContent,
                     )
                 }
             }
         }
+        Text(
+            text = stringResource(R.string.tagline),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MedsoundColors.FoamDim,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun BrandLockup(modifier: Modifier = Modifier) {
+    val name = stringResource(R.string.app_name)
+    Row(
+        modifier = modifier.semantics { contentDescription = name },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_brand_pulse),
+            contentDescription = null,
+            tint = MedsoundColors.Foam,
+            modifier = Modifier.size(width = 78.dp, height = 32.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold, letterSpacing = 0.4.sp)) {
+                    append("MED")
+                }
+                withStyle(SpanStyle(fontWeight = FontWeight.Light)) {
+                    append("Sound")
+                }
+            },
+            color = MedsoundColors.Foam,
+            fontFamily = FontFamily.SansSerif,
+            fontSize = 26.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -283,13 +330,13 @@ private fun SoundRow(
             .padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SoundIconBadge(kind = sound.icon, selected = selected && !locked, dimmed = locked)
+        SoundIconBadge(kind = sound.icon, selected = selected, dimmed = locked && !selected)
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(sound.titleRes),
                 style = MaterialTheme.typography.titleLarge,
-                color = if (locked) {
+                color = if (locked && !selected) {
                     MedsoundColors.Foam.copy(alpha = 0.55f)
                 } else if (selected) {
                     MedsoundColors.Foam
@@ -740,13 +787,45 @@ private fun PremiumSheet(
     }
 }
 
+@Composable
+private fun CategoryHeader(category: SoundCategory) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 2.dp, start = 4.dp),
+    ) {
+        Text(
+            text = stringResource(category.titleRes),
+            style = MaterialTheme.typography.titleMedium,
+            color = MedsoundColors.Mist,
+        )
+        category.detailRes?.let { detail ->
+            Text(
+                text = stringResource(detail),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MedsoundColors.FoamDim,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+    }
+}
+
 private fun SoundIconKind.toImageVector(): ImageVector = when (this) {
+    SoundIconKind.Snow -> Icons.Rounded.AcUnit
+    SoundIconKind.Storm -> Icons.Rounded.Thunderstorm
     SoundIconKind.Rain -> Icons.Rounded.WaterDrop
-    SoundIconKind.WhiteNoise -> Icons.Rounded.GraphicEq
-    SoundIconKind.Ocean -> Icons.Rounded.Waves
+    SoundIconKind.Waves -> Icons.Rounded.Waves
+    SoundIconKind.Water -> Icons.Rounded.Water
+    SoundIconKind.Engine -> Icons.Rounded.PrecisionManufacturing
     SoundIconKind.Fan -> Icons.Rounded.Air
-    SoundIconKind.BrownNoise -> Icons.Rounded.GraphicEq
-    SoundIconKind.Campfire -> Icons.Rounded.LocalFireDepartment
+    SoundIconKind.Factory -> Icons.Rounded.Factory
+    SoundIconKind.Dryer -> Icons.Rounded.Dry
+    SoundIconKind.Ship -> Icons.Rounded.DirectionsBoat
+    SoundIconKind.Train -> Icons.Rounded.Train
+    SoundIconKind.Vacuum -> Icons.Rounded.CleaningServices
+    SoundIconKind.Washer -> Icons.Rounded.LocalLaundryService
+    SoundIconKind.Plane -> Icons.Rounded.Flight
+    SoundIconKind.Planet -> Icons.Rounded.Public
 }
 
 private fun formatRemaining(ms: Long): String {
